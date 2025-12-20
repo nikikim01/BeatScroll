@@ -1,3 +1,16 @@
+const RESTS = {
+  ",": 1,
+  ";": 1,
+  ":": 1,
+  ".": 2,
+  "!": 2,
+  "?": 2,
+  "—": 2,
+  "–": 2,
+  "(": 1,
+  ")": 1,
+};
+
 (() => {
   // ---------- Audio (simple synth/noise, no assets) ----------
   let audioCtx = null;
@@ -152,12 +165,19 @@
 
   function primeCurrentWord() {
     spans.forEach((s) => s.classList.remove("current"));
-    // skip punctuation tokens automatically
+    // don't skip punctuations
     while (wordIdx < tokens.length && isPunctToken(tokens[wordIdx])) wordIdx++;
     if (wordIdx >= tokens.length) return;
 
     spans[wordIdx].classList.add("current");
     stepsNeeded = computeStepsForWord(tokens[wordIdx]);
+
+    const t = tokens[wordIdx];
+    if (isPunctToken(t)) {
+      stepsNeeded = RESTS[t] ?? 1;
+    } else {
+      stepsNeeded = computeStepsForWord(t);
+    }
 
     // attach pips display under current token
     cleanupPips();
