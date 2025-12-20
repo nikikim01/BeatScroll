@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BeatScroll MVP</title>
+  <style>
+    :root { --bg:#0b0f14; --fg:#e8eef6; --muted:#8aa0b8; --accent:#7ee787; --line:#2a3a4d; }
+    body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+           background:var(--bg); color:var(--fg); display:flex; height:100vh; }
+    .left { width:min(520px, 42vw); padding:18px 18px 18px 22px; border-right:1px solid #152233; box-sizing:border-box; }
+    .right { flex:1; position:relative; padding:18px; box-sizing:border-box; }
+    h1 { font-size:18px; margin:0 0 10px; }
+    .hint { color:var(--muted); font-size:13px; line-height:1.35; }
+    .kbd { display:inline-block; padding:2px 7px; border:1px solid #284059; border-bottom-width:2px; border-radius:8px; font-size:12px; }
+    .row { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    label { font-size:13px; color:var(--muted); }
+    input[type="range"] { width:180px; }
+    textarea { width:100%; height:240px; margin-top:12px; background:#070a0e; color:var(--fg);
+               border:1px solid #152233; border-radius:12px; padding:12px; box-sizing:border-box; resize:vertical; }
+    button { background:#121b26; color:var(--fg); border:1px solid #223449; border-radius:12px; padding:10px 12px;
+             cursor:pointer; font-weight:600; }
+    button:hover { border-color:#2f4a66; }
+    .stageWrap { height:calc(100vh - 36px); }
+    .stage {
+      height:100%;
+      overflow:auto;
+      border:1px solid #152233;
+      border-radius:16px;
+      background:#06080b;
+      padding:22px 22px 60vh 22px; /* bottom padding so last words can reach playhead */
+      box-sizing:border-box;
+      position:relative;
+      scroll-behavior:smooth;
+    }
+    .playhead {
+      position:absolute;
+      left:18px; right:18px;
+      top:45%;
+      height:0;
+      border-top:2px dashed var(--line);
+      pointer-events:none;
+      z-index:5;
+    }
+    .token {
+      display:inline-block;
+      margin:4px 6px 4px 0;
+      padding:4px 8px;
+      border-radius:10px;
+      color:#cfe0f2;
+      border:1px solid transparent;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .token.punct { color:#6f86a1; }
+    .token.current {
+      border-color: #2c6a43;
+      box-shadow: 0 0 0 2px rgba(126,231,135,0.16);
+      background: rgba(126,231,135,0.10);
+      color: #eafff1;
+    }
+    .pips {
+      display:block;
+      margin-top:4px;
+      font-size:11px;
+      letter-spacing:2px;
+      color:#9cb3cc;
+    }
+    .stats { margin-top:12px; font-size:13px; color:var(--muted); }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #223449; margin-left:8px; }
+    .warn { color:#f2d38b; }
+  </style>
+</head>
+<body>
+  <div class="left">
+    <h1>BeatScroll MVP <span class="badge">keys = sound · presses = progress</span></h1>
+    <div class="hint">
+      Press <span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span class="kbd">F</span>
+      or <span class="kbd">J</span><span class="kbd">K</span><span class="kbd">L</span><span class="kbd">;</span>
+      to advance the text.<br><br>
+      Each press “pays” one syllable-step. When the word’s pips fill, it advances to the next word.
+      <span class="warn">(Syllables are approximate in this MVP.)</span>
+    </div>
+
+    <div class="row">
+      <label>Presses per syllable</label>
+      <input id="pps" type="range" min="1" max="4" step="1" value="1" />
+      <span id="ppsLabel" class="kbd">1</span>
+    </div>
+
+    <div class="row">
+      <label>Debounce (ms)</label>
+      <input id="debounce" type="range" min="40" max="250" step="10" value="100" />
+      <span id="debounceLabel" class="kbd">100</span>
+    </div>
+
+    <div class="row">
+      <button id="loadBtn">Load Text</button>
+      <button id="resetBtn">Reset</button>
+      <button id="audioBtn">Enable Audio</button>
+    </div>
+
+    <textarea id="textInput">
+Reading is usually passive. This makes it embodied. Each key press turns the crank. The page moves only when you move. Now the text is a music box cylinder and your fingers decide the pace.</textarea>
+
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="right">
+    <div class="stageWrap">
+      <div class="playhead" id="playhead"></div>
+      <div class="stage" id="stage" aria-label="reading stage"></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- Audio (simple synth/noise, no assets) ----------
+  let audioCtx = null;
+  let audioEnabled = false;
+
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    audioEnabled = true;
+    document.getElementById("audioBtn").textContent = "Audio Enabled";
+  }
+
+  // Key → timbre “preset”
+  const keyMap = {
+    "a": { type:"sine",     base: 220, detune: 0,  dur: 0.09 },
+    "s": { type:"triangle", base: 196, detune: 0,  dur: 0.10 },
+    "d": { type:"square",   base: 164, detune: 0,  dur: 0.07 },
+    "f": { type:"sawtooth", base: 247, detune: 0,  dur: 0.06 },
+    "j": { type:"noise",    base: 0,   detune: 0,  dur: 0.05 },
+    "k": { type:"sine",     base: 330, detune: 7,  dur: 0.06 },
+    "l": { type:"triangle", base: 262, detune:-5,  dur: 0.08 },
+    ";": { type:"noise",    base: 0,   detune: 0,  dur: 0.03 },
+  };
+
+  // “Pleasant enough” pitch cycle (pentatonic-ish)
+  const pitchCycle = [0, 2, 4, 7, 9, 7, 4, 2]; // semitone offsets
+  let pitchIdx = 0;
+
+  function playSoundForKey(k) {
+    if (!audioEnabled) return;
+
+    ensureAudio();
+    const preset = keyMap[k];
+    if (!preset) return;
+
+    const now = audioCtx.currentTime;
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.20, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + preset.dur);
+
+    gain.connect(audioCtx.destination);
+
+    if (preset.type === "noise") {
+      // white noise burst
+      const bufferSize = Math.floor(audioCtx.sampleRate * preset.dur);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.65;
+
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(gain);
+      src.start(now);
+      src.stop(now + preset.dur);
+      return;
+    }
+
+    // oscillator note
+    const osc = audioCtx.createOscillator();
+    osc.type = preset.type;
+
+    const semi = pitchCycle[pitchIdx++ % pitchCycle.length];
+    const freq = preset.base * Math.pow(2, semi / 12);
+
+    osc.frequency.setValueAtTime(freq, now);
+    osc.detune.setValueAtTime(preset.detune, now);
+    osc.connect(gain);
+    osc.start(now);
+    osc.stop(now + preset.dur);
+  }
+
+  // ---------- Text/token rendering ----------
+  const stage = document.getElementById("stage");
+  const playhead = document.getElementById("playhead");
+  const statsEl = document.getElementById("stats");
+  const ppsEl = document.getElementById("pps");
+  const ppsLabel = document.getElementById("ppsLabel");
+  const debounceEl = document.getElementById("debounce");
+  const debounceLabel = document.getElementById("debounceLabel");
+
+  let tokens = [];
+  let spans = [];
+  let wordIdx = 0;
+
+  // syllable-step state for current word
+  let stepsNeeded = 1;
+  let stepsDone = 0;
+
+  function isPunctToken(t) {
+    return /^[,.;:!?()\[\]{}—–-]+$/.test(t);
+  }
+
+  // Very rough syllable estimator (good enough for “press density” feel)
+  function estimateSyllables(word) {
+    const w = word.toLowerCase().replace(/[^a-z]/g, "");
+    if (!w) return 1;
+    if (w.length <= 3) return 1;
+
+    const vowels = w.match(/[aeiouy]+/g);
+    let count = vowels ? vowels.length : 1;
+
+    // common English tweak: trailing 'e'
+    if (w.endsWith("e")) count = Math.max(1, count - 1);
+    // 'le' ending
+    if (w.endsWith("le") && w.length > 4) count += 1;
+
+    return Math.max(1, Math.min(6, count));
+  }
+
+  function computeStepsForWord(word) {
+    const pressesPerSyllable = parseInt(ppsEl.value, 10);
+    const syll = estimateSyllables(word);
+    return pressesPerSyllable * syll;
+  }
+
+  function pipString(done, needed) {
+    // cap visual pips so it doesn't get silly
+    const cap = Math.min(12, needed);
+    const shownDone = Math.min(cap, Math.round(done * cap / needed));
+    return "●".repeat(shownDone) + "○".repeat(cap - shownDone);
+  }
+
+  function render(text) {
+    // Split into tokens, keeping punctuation as separate tokens
+    const raw = text
+      .replace(/\s+/g, " ")
+      .trim()
+      .match(/[\w’']+|[.,;:!?()\[\]{}—–-]/g) || [];
+
+    tokens = raw;
+    spans = [];
+    stage.innerHTML = "";
+
+    raw.forEach((t) => {
+      const span = document.createElement("span");
+      span.className = "token" + (isPunctToken(t) ? " punct" : "");
+      span.textContent = t;
+      stage.appendChild(span);
+      spans.push(span);
+    });
+
+    wordIdx = 0;
+    stepsDone = 0;
+    primeCurrentWord();
+    updateStats();
+    scrollCurrentToPlayhead(true);
+  }
+
+  function primeCurrentWord() {
+    spans.forEach(s => s.classList.remove("current"));
+    // skip punctuation tokens automatically
+    while (wordIdx < tokens.length && isPunctToken(tokens[wordIdx])) wordIdx++;
+    if (wordIdx >= tokens.length) return;
+
+    spans[wordIdx].classList.add("current");
+    stepsNeeded = computeStepsForWord(tokens[wordIdx]);
+
+    // attach pips display under current token
+    cleanupPips();
+    const pips = document.createElement("span");
+    pips.className = "pips";
+    pips.textContent = pipString(stepsDone, stepsNeeded);
+    spans[wordIdx].appendChild(pips);
+  }
+
+  function cleanupPips() {
+    stage.querySelectorAll(".pips").forEach(el => el.remove());
+  }
+
+  function updatePips() {
+    const current = spans[wordIdx];
+    if (!current) return;
+    const p = current.querySelector(".pips");
+    if (p) p.textContent = pipString(stepsDone, stepsNeeded);
+  }
+
+  function updateStats() {
+    const totalWords = tokens.filter(t => !isPunctToken(t)).length;
+    const doneWords = tokens.slice(0, wordIdx).filter(t => !isPunctToken(t)).length;
+    const pressesPerSyllable = parseInt(ppsEl.value, 10);
+    statsEl.innerHTML =
+      `Words: <span class="kbd">${doneWords}</span> / <span class="kbd">${totalWords}</span> ` +
+      `· Current steps: <span class="kbd">${stepsDone}</span> / <span class="kbd">${stepsNeeded}</span> ` +
+      `· Presses/syllable: <span class="kbd">${pressesPerSyllable}</span>`;
+  }
+
+  function scrollCurrentToPlayhead(force=false) {
+    const current = spans[wordIdx];
+    if (!current) return;
+
+    // playhead is at 45% of viewport height (see CSS)
+    const stageRect = stage.getBoundingClientRect();
+    const playheadY = stageRect.top + stageRect.height * 0.45;
+
+    const curRect = current.getBoundingClientRect();
+    const curMidY = curRect.top + curRect.height / 2;
+
+    const delta = curMidY - playheadY;
+    // only scroll if noticeably off, unless force
+    if (force || Math.abs(delta) > 18) {
+      stage.scrollTop += delta;
+    }
+  }
+
+  // ---------- Input handling ----------
+  let lastPressAt = 0;
+
+  function handleAdvance(key) {
+    const now = performance.now();
+    const minInterval = parseInt(debounceEl.value, 10);
+    if (now - lastPressAt < minInterval) return;
+    lastPressAt = now;
+
+    // If finished, do nothing
+    if (wordIdx >= tokens.length) return;
+
+    playSoundForKey(key);
+
+    // If current word is unset (end), stop
+    if (!tokens[wordIdx]) return;
+
+    stepsDone++;
+    updatePips();
+    updateStats();
+
+    // When steps complete: advance to next word
+    if (stepsDone >= stepsNeeded) {
+      stepsDone = 0;
+      wordIdx++;
+      primeCurrentWord();
+      updateStats();
+      scrollCurrentToPlayhead(false);
+    } else {
+      // micro-scroll to create motion even within a long word
+      stage.scrollTop += 6;
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (keyMap[k]) {
+      e.preventDefault();
+      handleAdvance(k);
+    }
+    // Spacebar can also advance (neutral sound)
+    if (e.code === "Space") {
+      e.preventDefault();
+      // treat as "a" sound if enabled, otherwise silent
+      handleAdvance("a");
+    }
+  }, { passive:false });
+
+  // ---------- UI wiring ----------
+  document.getElementById("loadBtn").addEventListener("click", () => {
+    render(document.getElementById("textInput").value);
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    render(document.getElementById("textInput").value);
+  });
+
+  document.getElementById("audioBtn").addEventListener("click", () => {
+    ensureAudio();
+  });
+
+  ppsEl.addEventListener("input", () => {
+    ppsLabel.textContent = ppsEl.value;
+    // recompute steps for current word immediately
+    if (tokens[wordIdx] && !isPunctToken(tokens[wordIdx])) {
+      stepsNeeded = computeStepsForWord(tokens[wordIdx]);
+      stepsDone = Math.min(stepsDone, stepsNeeded);
+      updatePips();
+      updateStats();
+    }
+  });
+
+  debounceEl.addEventListener("input", () => {
+    debounceLabel.textContent = debounceEl.value;
+  });
+
+  // Initial render
+  ppsLabel.textContent = ppsEl.value;
+  debounceLabel.textContent = debounceEl.value;
+  render(document.getElementById("textInput").value);
+})();
+</script>
+</body>
+</html>
