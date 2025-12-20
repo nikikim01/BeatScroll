@@ -3,56 +3,83 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>BeatScroll MVP</title>
+
     <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./app.js"></script>
   </head>
-  <script src="./app.js" defer></script>
 
   <body>
-    <div class="left">
-      <h1>BeatScroll MVP <span class="badge">keys = sound · presses = progress</span></h1>
-      <div class="hint">
-        Press <span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span class="kbd">F</span>
-        or <span class="kbd">J</span><span class="kbd">K</span><span class="kbd">L</span><span class="kbd">;</span>
-        to advance the text.<br><br>
-        Each press “pays” one syllable-step. When the word’s pips fill, it advances to the next word.
-        <span class="warn">(Syllables are approximate in this MVP.)</span>
+    <!-- SIDEBAR / CONTROLS -->
+    <aside class="sidebar">
+      <header class="appHeader" id="headerMount">
+        <h1>
+          BeatScroll MVP
+          <span class="headerBadge">keys = sound · presses = progress</span>
+        </h1>
+
+        <div class="usageHint" id="hintMount">
+          Press
+          <span class="keyCap">A</span><span class="keyCap">S</span><span class="keyCap">D</span><span
+            class="keyCap">F</span>
+          or
+          <span class="keyCap">J</span><span class="keyCap">K</span><span class="keyCap">L</span><span
+            class="keyCap">;</span>
+          to advance the text.
+          <br /><br />
+          Each press “pays” one syllable-step. When the word’s pips fill,
+          it advances to the next word.
+          <span class="hintNote">(Syllables are approximate in this MVP.)</span>
+        </div>
+      </header>
+
+      <section class="controlsPanel" id="controlsMount">
+        <div class="controlRow">
+          <label for="pps">Presses per syllable</label>
+          <input id="pps" type="range" min="1" max="4" step="1" value="1" />
+          <span id="ppsLabel" class="keyCap">1</span>
+        </div>
+
+        <div class="controlRow">
+          <label for="debounce">Debounce (ms)</label>
+          <input id="debounce" type="range" min="40" max="250" step="10" value="100" />
+          <span id="debounceLabel" class="keyCap">100</span>
+        </div>
+
+        <div class="controlRow buttonRow">
+          <button id="loadBtn">Load Text</button>
+          <button id="resetBtn">Reset</button>
+          <button id="audioBtn">Enable Audio</button>
+          <button id="ttsBtn">TTS: Off</button>
+        </div>
+      </section>
+
+      <section class="textInputPanel" id="textMount">
+        <textarea id="textInput">
+Beat, Beat, Beat, Beat
+Losing focus when you read
+Eyes move fast but brain don’t eat
+Tap your feet not out in defeat
+Any article so easy complete
+
+No need to poll
+Get swole with BeatScroll
+        </textarea>
+      </section>
+
+      <section class="hudPanel" id="hudMount">
+        <div class="readingStats" id="stats"></div>
+      </section>
+    </aside>
+
+    <!-- READER / STAGE -->
+    <main class="readerPane" id="stageMount">
+      <div class="readerViewport">
+        <div class="readerPlayhead" id="playhead"></div>
+        <div class="readerStage" id="stage" aria-label="reading stage"></div>
       </div>
-
-      <div class="row">
-        <label>Presses per syllable</label>
-        <input id="pps" type="range" min="1" max="4" step="1" value="1" />
-        <span id="ppsLabel" class="kbd">1</span>
-      </div>
-
-      <div class="row">
-        <label>Debounce (ms)</label>
-        <input id="debounce" type="range" min="40" max="250" step="10" value="100" />
-        <span id="debounceLabel" class="kbd">100</span>
-      </div>
-
-      <div class="row">
-        <button id="loadBtn">Load Text</button>
-        <button id="resetBtn">Reset</button>
-        <button id="audioBtn">Enable Audio</button>
-        <button id="ttsBtn">TTS: Off</button>
-      </div>
-
-      <textarea id="textInput">
-Reading is usually passive. This makes it embodied. Each key press turns the crank. The page moves only when you move. Now the text is a music box cylinder and your fingers decide the pace.</textarea>
-
-      <div class="stats" id="stats"></div>
-    </div>
-
-    <div class="right">
-      <div class="stageWrap">
-        <div class="playhead" id="playhead"></div>
-        <div class="stage" id="stage" aria-label="reading stage"></div>
-      </div>
-    </div>
-
-
+    </main>
   </body>
 
 </html>
