@@ -11,39 +11,181 @@ const RESTS = {
   ")": 1,
 };
 
+const C4 = 261.625565; // Middle C
+const SEMI = (n) => C4 * Math.pow(2, n / 12);
+
+const NOTE_FREQ = {
+  // white keys
+  a: SEMI(0), // C4
+  s: SEMI(2), // D4
+  d: SEMI(4), // E4
+  f: SEMI(5), // F4
+  j: SEMI(7), // G4
+  k: SEMI(9), // A4
+  l: SEMI(11), // B4
+  ";": SEMI(12), // C5
+
+  // black keys
+  w: SEMI(1), // C#4
+  e: SEMI(3), // D#4
+  r: SEMI(6), // F#4
+  u: SEMI(8), // G#4
+  i: SEMI(10), // A#4
+};
+
+let octaveShift = 0; // -12, 0, +12
+let pHeld = false;
+let qHeld = false;
+
+function updateOctaveShift() {
+  octaveShift = (pHeld ? 12 : 0) + (qHeld ? -12 : 0);
+}
+
+function freqWithShift(baseFreq) {
+  // 12 semitones = x2; -12 = /2
+  return baseFreq * Math.pow(2, octaveShift / 12);
+}
+// ---------- TTS (Web Speech API) ----------
+let ttsBusy = false;
+
+function clamp(n, lo, hi) {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+// crude duration estimate (good enough for pacing)
+function estimateWordSeconds(word) {
+  const w = String(word || "");
+  const letters = w.replace(/[^A-Za-z]/g, "").length;
+  // baseline: short words ~0.20s, longer words scale up
+  return 0.18 + letters * 0.035;
+}
+let ttsEnabled = false;
+let ttsVoice = null;
+
+function pickVoice() {
+  if (!("speechSynthesis" in window)) return null;
+  const voices = speechSynthesis.getVoices();
+  if (!voices || !voices.length) return null;
+  // Prefer English if available
+  return voices.find((v) => /en/i.test(v.lang)) || voices[0];
+}
+
+function isPunctToken(t) {
+  return /^[,.;:!?()\[\]{}—–-]+$/.test(t);
+}
+
+function speakToken(token, targetSeconds = null) {
+  if (!ttsEnabled) return;
+  if (!("speechSynthesis" in window)) return;
+
+  if (!token || isPunctToken(token)) return;
+
+  const clean = String(token).replace(/[^A-Za-z0-9’']/g, "");
+  if (!clean) return;
+
+  // If already speaking, DON'T cancel (that causes cutoffs).
+  // Instead: mark busy and let the caller block input until this finishes.
+  // Also: clear any queued utterances so we don't get backlog.
+  if (speechSynthesis.pending) speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(clean);
+  u.voice = ttsVoice || pickVoice();
+  u.pitch = 1.0;
+  u.volume = 1.0;
+
+  // Try to speed up to fit within the beat window (debounce interval).
+  // If no target provided, use a reasonable default.
+  const est = estimateWordSeconds(clean);
+  const tgt = targetSeconds ?? 0.35;
+  // rate > 1.0 = faster speech; browsers clamp internally
+  u.rate = clamp(est / tgt, 0.85, 2.2);
+
+  ttsBusy = true;
+  u.onend = () => {
+    ttsBusy = false;
+  };
+  u.onerror = () => {
+    ttsBusy = false;
+  };
+
+  speechSynthesis.speak(u);
+}
+
+// Voices often load async
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = () => {
+    ttsVoice = pickVoice();
+  };
+}
+
 (() => {
   // ---------- Audio (simple synth/noise, no assets) ----------
   let audioCtx = null;
   let audioEnabled = false;
 
-  function ensureAudio() {
-    if (!audioCtx)
+  async function ensureAudio() {
+    if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+    if (audioCtx.state === "suspended") {
+      await audioCtx.resume(); // keypress counts as a user gesture
+    }
     audioEnabled = true;
-    document.getElementById("audioBtn").textContent = "Audio Enabled";
+
+    const btn = document.getElementById("audioBtn");
+    if (btn) btn.textContent = "Audio Enabled";
   }
 
-  // Key → timbre “preset”
+  // Key → pitched “preset”
   const keyMap = {
-    a: { type: "sine", base: 220, detune: 0, dur: 0.09 },
-    s: { type: "triangle", base: 196, detune: 0, dur: 0.1 },
-    d: { type: "square", base: 164, detune: 0, dur: 0.07 },
-    f: { type: "sawtooth", base: 247, detune: 0, dur: 0.06 },
-    j: { type: "noise", base: 0, detune: 0, dur: 0.05 },
-    k: { type: "sine", base: 330, detune: 7, dur: 0.06 },
-    l: { type: "triangle", base: 262, detune: -5, dur: 0.08 },
-    ";": { type: "noise", base: 0, detune: 0, dur: 0.03 },
-  };
+    // white keys
+    a: { type: "sine", dur: 0.09 },
+    s: { type: "triangle", dur: 0.1 },
+    d: { type: "square", dur: 0.07 },
+    f: { type: "sawtooth", dur: 0.06 },
+    j: { type: "sine", dur: 0.07 },
+    k: { type: "triangle", dur: 0.06 },
+    l: { type: "sine", dur: 0.08 },
+    ";": { type: "triangle", dur: 0.06 },
 
+    // black keys
+    w: { type: "sine", dur: 0.07 },
+    e: { type: "triangle", dur: 0.07 },
+    r: { type: "sawtooth", dur: 0.06 },
+    u: { type: "sine", dur: 0.06 },
+    i: { type: "triangle", dur: 0.06 },
+  };
   // “Pleasant enough” pitch cycle (pentatonic-ish)
   const pitchCycle = [0, 2, 4, 7, 9, 7, 4, 2]; // semitone offsets
   let pitchIdx = 0;
 
-  function playSoundForKey(k) {
+  function playKick() {
+    // requires audioCtx + audioEnabled
+    const now = audioCtx.currentTime;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    // Kick shape: quick drop in frequency + quick decay in volume
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.exponentialRampToValueAtTime(55, now + 0.07);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.9, now + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.13);
+  }
+
+  async function playSoundForKey(k) {
+    await ensureAudio(); // <-- unlock audio on first keypress
     if (!audioEnabled) return;
 
-    ensureAudio();
     const preset = keyMap[k];
     if (!preset) return;
 
@@ -75,11 +217,13 @@ const RESTS = {
     const osc = audioCtx.createOscillator();
     osc.type = preset.type;
 
-    const semi = pitchCycle[pitchIdx++ % pitchCycle.length];
-    const freq = preset.base * Math.pow(2, semi / 12);
+    const baseFreq = NOTE_FREQ[k];
+    if (!baseFreq) return;
 
+    const freq = freqWithShift(baseFreq);
     osc.frequency.setValueAtTime(freq, now);
-    osc.detune.setValueAtTime(preset.detune, now);
+
+    osc.detune.setValueAtTime(preset.detune ?? 0, now);
     osc.connect(gain);
     osc.start(now);
     osc.stop(now + preset.dur);
@@ -101,10 +245,6 @@ const RESTS = {
   // syllable-step state for current word
   let stepsNeeded = 1;
   let stepsDone = 0;
-
-  function isPunctToken(t) {
-    return /^[,.;:!?()\[\]{}—–-]+$/.test(t);
-  }
 
   // Very rough syllable estimator (good enough for “press density” feel)
   function estimateSyllables(word) {
@@ -165,12 +305,9 @@ const RESTS = {
 
   function primeCurrentWord() {
     spans.forEach((s) => s.classList.remove("current"));
-    // don't skip punctuations
-    while (wordIdx < tokens.length && isPunctToken(tokens[wordIdx])) wordIdx++;
     if (wordIdx >= tokens.length) return;
 
     spans[wordIdx].classList.add("current");
-    stepsNeeded = computeStepsForWord(tokens[wordIdx]);
 
     const t = tokens[wordIdx];
     if (isPunctToken(t)) {
@@ -179,7 +316,6 @@ const RESTS = {
       stepsNeeded = computeStepsForWord(t);
     }
 
-    // attach pips display under current token
     cleanupPips();
     const pips = document.createElement("span");
     pips.className = "pips";
@@ -231,8 +367,9 @@ const RESTS = {
   // ---------- Input handling ----------
   let lastPressAt = 0;
 
-  function handleAdvance(key) {
+  async function handleAdvance(key) {
     const now = performance.now();
+    if (ttsEnabled && ttsBusy) return;
     const minInterval = parseInt(debounceEl.value, 10);
     if (now - lastPressAt < minInterval) return;
     lastPressAt = now;
@@ -240,7 +377,14 @@ const RESTS = {
     // If finished, do nothing
     if (wordIdx >= tokens.length) return;
 
-    playSoundForKey(key);
+    if (key === "__kick__") {
+      // kick drum for timekeeping
+      ensureAudio().then(() => {
+        if (audioEnabled) playKick();
+      });
+    } else {
+      playSoundForKey(key);
+    }
 
     // If current word is unset (end), stop
     if (!tokens[wordIdx]) return;
@@ -251,6 +395,10 @@ const RESTS = {
 
     // When steps complete: advance to next word
     if (stepsDone >= stepsNeeded) {
+      // Speak the token we just completed (words only)
+      const minInterval = parseInt(debounceEl.value, 10);
+      speakToken(tokens[wordIdx], (minInterval / 1000) * 0.92);
+
       stepsDone = 0;
       wordIdx++;
       primeCurrentWord();
@@ -266,19 +414,55 @@ const RESTS = {
     "keydown",
     (e) => {
       const k = e.key.toLowerCase();
+
+      // octave modifiers (momentary while held)
+      if (k === "p") {
+        pHeld = true;
+        updateOctaveShift();
+        return;
+      }
+      if (k === "q") {
+        qHeld = true;
+        updateOctaveShift();
+        return;
+      }
+
       if (keyMap[k]) {
         e.preventDefault();
         handleAdvance(k);
       }
-      // Spacebar can also advance (neutral sound)
+
       if (e.code === "Space") {
         e.preventDefault();
-        // treat as "a" sound if enabled, otherwise silent
-        handleAdvance("a");
+        handleAdvance("__kick__");
       }
     },
     { passive: false }
   );
+
+  document.addEventListener("keyup", (e) => {
+    const k = e.key.toLowerCase();
+    if (k === "p") {
+      pHeld = false;
+      updateOctaveShift();
+    }
+    if (k === "q") {
+      qHeld = false;
+      updateOctaveShift();
+    }
+  });
+  // Wire in TTS
+  document.getElementById("ttsBtn").addEventListener("click", () => {
+    ttsEnabled = !ttsEnabled;
+    document.getElementById("ttsBtn").textContent = `TTS: ${
+      ttsEnabled ? "On" : "Off"
+    }`;
+    if (ttsEnabled) {
+      ttsVoice = pickVoice();
+    } else {
+      if ("speechSynthesis" in window) speechSynthesis.cancel();
+    }
+  });
 
   // ---------- UI wiring ----------
   document.getElementById("loadBtn").addEventListener("click", () => {
