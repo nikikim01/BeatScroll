@@ -14,28 +14,43 @@ body {
   display: flex;
   height: 100vh;
 }
-.left {
+.sidebar {
   width: min(520px, 42vw);
   padding: 18px 18px 18px 22px;
   border-right: 1px solid #152233;
   box-sizing: border-box;
+  overflow-y: auto;
 }
-.right {
+.readerPane {
   flex: 1;
   position: relative;
   padding: 18px;
   box-sizing: border-box;
 }
+.hatIndicator {
+  margin-top: 10px;
+  opacity: 0.85;
+  font-size: 0.95rem;
+}
+.hatIndicator .keyCap {
+  margin-left: 6px;
+}
 h1 {
   font-size: 18px;
   margin: 0 0 10px;
 }
-.hint {
+.usageHint {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.35;
 }
-.kbd {
+.hintNote {
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0.85;
+}
+.kbd,
+.keyCap {
   display: inline-block;
   padding: 2px 7px;
   border: 1px solid #284059;
@@ -43,7 +58,7 @@ h1 {
   border-radius: 8px;
   font-size: 12px;
 }
-.row {
+.controlRow {
   margin-top: 12px;
   display: flex;
   gap: 10px;
@@ -81,10 +96,11 @@ button {
 button:hover {
   border-color: #2f4a66;
 }
-.stageWrap {
+.readerViewport {
   height: calc(100vh - 36px);
+  position: relative;
 }
-.stage {
+.readerStage {
   height: 100%;
   overflow: auto;
   border: 1px solid #152233;
@@ -95,7 +111,7 @@ button:hover {
   position: relative;
   scroll-behavior: smooth;
 }
-.playhead {
+.readerPlayhead {
   position: absolute;
   left: 18px;
   right: 18px;
@@ -131,18 +147,52 @@ button:hover {
   letter-spacing: 2px;
   color: #9cb3cc;
 }
-.stats {
+.readingStats {
   margin-top: 12px;
   font-size: 13px;
   color: var(--muted);
 }
-.badge {
+.headerBadge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
   border: 1px solid #223449;
   margin-left: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  vertical-align: middle;
 }
-.warn {
-  color: #f2d38b;
+.controlLegend {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legendTitle {
+  font-size: 0.95rem;
+  margin: 0 0 8px 0;
+  opacity: 0.9;
+}
+
+.legendGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.legendRow {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.legendKeys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.legendAction {
+  opacity: 0.9;
+  line-height: 1.25;
 }
