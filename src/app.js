@@ -26,6 +26,7 @@ const controlsView = createControlsView({
   ttsBtn: document.getElementById("ttsBtn"),
   tts,
   audio,
+  hatIndicatorEl: document.getElementById("hatIndicator"),
 });
 
 const controller = createController({
@@ -47,5 +48,6 @@ const input = createInputRouter({
   controller,
   tts,
   getDebounceMs: () => controlsView.getControls().debounceMs,
+  setHatUI: controlsView.setHatUI,
 });
 input.mount();

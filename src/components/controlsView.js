@@ -9,6 +9,7 @@ export function createControlsView({
   ttsBtn,
   tts,
   audio,
+  hatIndicatorEl,
 }) {
   function getControls() {
     return {
@@ -17,9 +18,15 @@ export function createControlsView({
     };
   }
 
+  function setHatUI(isOpen) {
+    if (!hatIndicatorEl) return;
+    hatIndicatorEl.textContent = `Hat: ${isOpen ? "Open" : "Closed"}`;
+  }
+
   function mount(onLoadOrReset) {
     ppsLabel.textContent = ppsEl.value;
     debounceLabel.textContent = debounceEl.value;
+    if (hatIndicatorEl) setHatUI(false);
 
     ppsEl.addEventListener("input", () => {
       ppsLabel.textContent = ppsEl.value;
@@ -47,5 +54,5 @@ export function createControlsView({
     });
   }
 
-  return { getControls, mount };
+  return { getControls, mount, setHatUI };
 }

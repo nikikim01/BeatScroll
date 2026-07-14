@@ -1,4 +1,10 @@
-export function createInputRouter({ audio, controller, tts, getDebounceMs }) {
+export function createInputRouter({
+  audio,
+  controller,
+  tts,
+  getDebounceMs,
+  setHatUI,
+}) {
   let lastPressAt = 0;
 
   function canPress() {
@@ -21,30 +27,72 @@ export function createInputRouter({ audio, controller, tts, getDebounceMs }) {
 
     const k = e.key.toLowerCase();
 
+    // octave modifiers
     if (k === "p" || k === "q") {
       audio.setModifierHeld(k, true);
       return;
     }
 
-    if (e.code === "Space") {
-      e.preventDefault();
-      if (!canPress()) return;
-      audio.ensureAudio().then(() => audio.playKick());
-      controller.advanceOneStep();
+    // Open HI-HAT
+    if (e.code === "ShiftLeft") {
+      audio.setHatOpenHeld(true);
+      setHatUI?.(true);
       return;
     }
 
+    // KICK
+    if (e.code === "Space") {
+      // Don't prevent browser shortcuts (Cmd/Ctrl/Alt + Space)
+      const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
+      if (!isSysCombo) e.preventDefault();
+      if (!isSysCombo) audio.ensureAudio().then(() => audio.playKick());
+      return;
+    }
+
+    // HI-HAT
+    if (k === "h") {
+      // Respect system modifier keys (e.g., Cmd+Shift+H)
+      const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
+      if (!isSysCombo) {
+        e.preventDefault();
+        audio.ensureAudio().then(() => audio.playHat());
+      }
+      return;
+    }
+
+    // SNARE
+    if (k === "v") {
+      const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
+      if (!isSysCombo) {
+        e.preventDefault();
+        audio.ensureAudio().then(() => audio.playSnare());
+      }
+      return;
+    }
+
+    // MELODY / SYLLABLE ADVANCE
     if (audio.isMelodyKey(k)) {
+      // If the user is holding a system modifier, don't hijack the shortcut
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       e.preventDefault();
       if (!canPress()) return;
+
       audio.ensureAudio().then(() => audio.playNote(k));
-      controller.advanceOneStep();
+      controller.advanceOneSyllable();
     }
   }
 
   function onKeyUp(e) {
     const k = e.key.toLowerCase();
-    if (k === "p" || k === "q") audio.setModifierHeld(k, false);
+    if (e.code === "ShiftLeft") {
+      audio.setHatOpenHeld(false);
+      setHatUI?.(false);
+      return;
+    }
+    if (k === "p" || k === "q") {
+      audio.setModifierHeld(k, false);
+      return;
+    }
   }
 
   function mount() {
