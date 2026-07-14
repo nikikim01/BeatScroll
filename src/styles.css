@@ -342,6 +342,9 @@ button:hover {
   justify-content: center;
   z-index: 20;
 }
+.helpOverlay[hidden] {
+  display: none;
+}
 .helpPanel {
   position: relative;
   max-width: 480px;
