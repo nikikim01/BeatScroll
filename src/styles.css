@@ -316,6 +316,34 @@ button:hover {
     transform: rotate(0deg);
   }
 }
+.drumsticks.sticksClick .stickLeft {
+  animation: stickClickLeft 0.1s ease-out;
+}
+.drumsticks.sticksClick .stickRight {
+  animation: stickClickRight 0.1s ease-out;
+}
+@keyframes stickClickLeft {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-26deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes stickClickRight {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(26deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
 
 .helpBtn {
   background: none;

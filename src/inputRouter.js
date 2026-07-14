@@ -87,6 +87,28 @@ export function createInputRouter({
       return;
     }
 
+    // COWBELL
+    if (k === "c") {
+      const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
+      if (!isSysCombo) {
+        e.preventDefault();
+        audio.ensureAudio().then(() => audio.playCowbell());
+        instrumentHud?.hitDrum("cowbell");
+      }
+      return;
+    }
+
+    // STICK CLICK (cross-stick)
+    if (k === "x") {
+      const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
+      if (!isSysCombo) {
+        e.preventDefault();
+        audio.ensureAudio().then(() => audio.playStickClick());
+        instrumentHud?.hitDrum("stickClick");
+      }
+      return;
+    }
+
     // MELODY / SYLLABLE ADVANCE
     if (audio.isMelodyKey(k)) {
       // If the user is holding a system modifier, don't hijack the shortcut

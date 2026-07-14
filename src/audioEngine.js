@@ -230,6 +230,57 @@ export function createAudioEngine() {
     osc.stop(now + 0.11);
   }
 
+  function playCowbell() {
+    if (!enabled) return;
+    const now = audioCtx.currentTime;
+
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    osc1.type = "square";
+    osc2.type = "square";
+    osc1.frequency.setValueAtTime(587, now);
+    osc2.frequency.setValueAtTime(845, now);
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(700, now);
+    filter.Q.setValueAtTime(1, now);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.25, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.3);
+    osc2.stop(now + 0.3);
+  }
+
+  function playStickClick() {
+    if (!enabled) return;
+    const now = audioCtx.currentTime;
+
+    const osc = audioCtx.createOscillator();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(1800, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.03);
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
   function setHatOpenHeld(held) {
     hatOpenHeld = held;
   }
@@ -247,6 +298,8 @@ export function createAudioEngine() {
     playKick,
     playHat,
     playSnare,
+    playCowbell,
+    playStickClick,
     playNote,
     setModifierHeld,
     setHatOpenHeld,

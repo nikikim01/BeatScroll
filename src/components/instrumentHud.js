@@ -5,10 +5,17 @@ export function createInstrumentHud({ hudEl }) {
   let keyEls = {};
   let sticksEl = null;
 
-  function restartAnimation(el, className) {
+  function restartAnimation(el, className, animationName) {
     el.classList.remove(className);
     void el.offsetWidth; // force reflow so the animation restarts
     el.classList.add(className);
+    el.addEventListener(
+      "animationend",
+      (e) => {
+        if (e.animationName === animationName) el.classList.remove(className);
+      },
+      { once: true }
+    );
   }
 
   function spawnWisp(keyEl) {
@@ -69,13 +76,17 @@ export function createInstrumentHud({ hudEl }) {
   function flashKey(k) {
     const el = keyEls[k];
     if (!el) return;
-    restartAnimation(el, "keyActive");
+    restartAnimation(el, "keyActive", "keyFlash");
     spawnWisp(el);
   }
 
   function hitDrum(type) {
     if (!sticksEl) return;
-    restartAnimation(sticksEl, "sticksHit");
+    if (type === "stickClick") {
+      restartAnimation(sticksEl, "sticksClick", "stickClickLeft");
+    } else {
+      restartAnimation(sticksEl, "sticksHit", "stickHitLeft");
+    }
   }
 
   return { mount, flashKey, hitDrum };
