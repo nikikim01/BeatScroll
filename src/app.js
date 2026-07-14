@@ -25,6 +25,7 @@ const controlsView = createControlsView({
   audioBtn: document.getElementById("audioBtn"),
   ttsBtn: document.getElementById("ttsBtn"),
   tts,
+  audio,
 });
 
 const controller = createController({

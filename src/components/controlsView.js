@@ -8,6 +8,7 @@ export function createControlsView({
   audioBtn,
   ttsBtn,
   tts,
+  audio,
 }) {
   function getControls() {
     return {
@@ -33,8 +34,10 @@ export function createControlsView({
     resetBtn.addEventListener("click", onLoadOrReset);
 
     audioBtn.addEventListener("click", () => {
-      // optional manual unlock button still works
-      // (audio also auto-unlocks on keypress)
+      audio.ensureAudio().then(() => {
+        audioBtn.textContent = "Audio: On";
+        audioBtn.disabled = true;
+      });
     });
 
     ttsBtn.addEventListener("click", () => {
