@@ -10,11 +10,13 @@ export function createControlsView({
   tts,
   audio,
   hatIndicatorEl,
+  burstDecelEl,
 }) {
   function getControls() {
     return {
       pps: parseInt(ppsEl.value, 10),
       debounceMs: parseInt(debounceEl.value, 10),
+      burstDecel: burstDecelEl.checked,
     };
   }
 

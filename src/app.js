@@ -27,6 +27,7 @@ const controlsView = createControlsView({
   tts,
   audio,
   hatIndicatorEl: document.getElementById("hatIndicator"),
+  burstDecelEl: document.getElementById("burstDecel"),
 });
 
 const controller = createController({

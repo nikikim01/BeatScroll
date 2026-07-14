@@ -42,6 +42,11 @@
         </div>
 
         <div class="controlRow">
+          <label for="burstDecel">Gradual deceleration after burst</label>
+          <input id="burstDecel" type="checkbox" checked />
+        </div>
+
+        <div class="controlRow">
           <label for="debounce">Debounce (ms)</label>
           <input id="debounce" type="range" min="40" max="250" step="10" value="100" />
           <span id="debounceLabel" class="keyCap">100</span>
@@ -99,6 +104,11 @@
           <div class="legendRow">
             <span class="legendKeys"><span class="keyCap">Q</span></span>
             <span class="legendAction">Hold = Octave down</span>
+          </div>
+
+          <div class="legendRow">
+            <span class="legendKeys"><span class="keyCap">Shift</span> (right, hold)</span>
+            <span class="legendAction">Burst — ramp forward through easy text</span>
           </div>
         </div>
       </section>

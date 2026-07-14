@@ -72,6 +72,13 @@ export function createController({
   state.sylls = [];
   state.syllIdx = 0;
   state.pressesInSyll = 0;
+  state.burstHeld = false;
+  state.burstLevel = 0;
+
+  function setBurstHeld(held) {
+    state.burstHeld = held;
+    if (held) state.burstLevel = 0;
+  }
 
   function prime() {
     if (state.wordIdx >= state.tokens.length) return;
@@ -126,34 +133,50 @@ export function createController({
   function advanceOneSyllable() {
     if (state.wordIdx >= state.tokens.length) return;
 
-    const t = state.tokens[state.wordIdx];
-    const { pps, debounceMs } = getControls();
-    const requiredPresses = isPunctToken(t) ? 1 : pps;
+    const { pps, debounceMs, burstDecel } = getControls();
 
-    state.pressesInSyll++;
-    if (state.pressesInSyll < requiredPresses) {
-      updateStats();
-      return;
+    let credits;
+    if (state.burstHeld) {
+      credits = 1 + Math.pow(2, state.burstLevel);
+      state.burstLevel++;
+    } else if (state.burstLevel > 0 && burstDecel) {
+      credits = 1 + Math.pow(2, state.burstLevel);
+      state.burstLevel--;
+    } else {
+      credits = 1;
+      state.burstLevel = 0;
     }
-    state.pressesInSyll = 0;
 
-    state.syllIdx++;
-    stageView.setPips(
-      state.wordIdx,
-      pipString(state.syllIdx, state.sylls.length)
-    );
+    while (credits > 0 && state.wordIdx < state.tokens.length) {
+      const t = state.tokens[state.wordIdx];
+      const requiredPresses = isPunctToken(t) ? 1 : pps;
+
+      state.pressesInSyll++;
+      credits--;
+      if (state.pressesInSyll < requiredPresses) continue;
+
+      state.pressesInSyll = 0;
+      state.syllIdx++;
+      stageView.setPips(
+        state.wordIdx,
+        pipString(state.syllIdx, state.sylls.length)
+      );
+
+      if (state.syllIdx >= state.sylls.length) {
+        // Word/token complete → speak the full word (not syllables)
+        tts.speakToken(
+          state.tokens[state.wordIdx],
+          (debounceMs / 1000) * 0.92
+        );
+
+        state.wordIdx++;
+        prime();
+        stageView.scrollToPlayhead(state.wordIdx, false);
+      }
+    }
+
     updateStats();
-
-    if (state.syllIdx >= state.sylls.length) {
-      // Word/token complete → speak the full word (not syllables)
-      tts.speakToken(state.tokens[state.wordIdx], (debounceMs / 1000) * 0.92);
-
-      state.wordIdx++;
-      prime();
-      updateStats();
-      stageView.scrollToPlayhead(state.wordIdx, false);
-    }
   }
 
-  return { loadFromTextarea, advanceOneSyllable };
+  return { loadFromTextarea, advanceOneSyllable, setBurstHeld };
 }

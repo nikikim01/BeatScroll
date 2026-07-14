@@ -40,6 +40,13 @@ export function createInputRouter({
       return;
     }
 
+    // Burst tempo (ramp)
+    if (e.code === "ShiftRight") {
+      if (e.repeat) return;
+      controller.setBurstHeld(true);
+      return;
+    }
+
     // KICK
     if (e.code === "Space") {
       // Don't prevent browser shortcuts (Cmd/Ctrl/Alt + Space)
@@ -87,6 +94,10 @@ export function createInputRouter({
     if (e.code === "ShiftLeft") {
       audio.setHatOpenHeld(false);
       setHatUI?.(false);
+      return;
+    }
+    if (e.code === "ShiftRight") {
+      controller.setBurstHeld(false);
       return;
     }
     if (k === "p" || k === "q") {
