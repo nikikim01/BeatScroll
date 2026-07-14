@@ -3,6 +3,7 @@ import { createAudioEngine } from "./audioEngine.js";
 import { createTTS } from "./tts.js";
 import { createStageView } from "./components/stageView.js";
 import { createControlsView } from "./components/controlsView.js";
+import { createInstrumentHud } from "./components/instrumentHud.js";
 import { createController } from "./controller.js";
 import { createInputRouter } from "./inputRouter.js";
 
@@ -44,11 +45,17 @@ const controller = createController({
 controlsView.mount(() => controller.loadFromTextarea());
 controller.loadFromTextarea();
 
+const instrumentHud = createInstrumentHud({
+  hudEl: document.getElementById("hudMount"),
+});
+instrumentHud.mount();
+
 const input = createInputRouter({
   audio,
   controller,
   tts,
   getDebounceMs: () => controlsView.getControls().debounceMs,
   setHatUI: controlsView.setHatUI,
+  instrumentHud,
 });
 input.mount();

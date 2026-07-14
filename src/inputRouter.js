@@ -4,6 +4,7 @@ export function createInputRouter({
   tts,
   getDebounceMs,
   setHatUI,
+  instrumentHud,
 }) {
   let lastPressAt = 0;
 
@@ -37,6 +38,7 @@ export function createInputRouter({
     if (e.code === "ShiftLeft") {
       audio.setHatOpenHeld(true);
       setHatUI?.(true);
+      instrumentHud?.hitDrum("openHat");
       return;
     }
 
@@ -52,7 +54,10 @@ export function createInputRouter({
       // Don't prevent browser shortcuts (Cmd/Ctrl/Alt + Space)
       const isSysCombo = e.metaKey || e.ctrlKey || e.altKey;
       if (!isSysCombo) e.preventDefault();
-      if (!isSysCombo) audio.ensureAudio().then(() => audio.playKick());
+      if (!isSysCombo) {
+        audio.ensureAudio().then(() => audio.playKick());
+        instrumentHud?.hitDrum("kick");
+      }
       return;
     }
 
@@ -63,6 +68,7 @@ export function createInputRouter({
       if (!isSysCombo) {
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playHat());
+        instrumentHud?.hitDrum("hat");
       }
       return;
     }
@@ -73,6 +79,7 @@ export function createInputRouter({
       if (!isSysCombo) {
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playSnare());
+        instrumentHud?.hitDrum("snare");
       }
       return;
     }
@@ -84,6 +91,7 @@ export function createInputRouter({
       e.preventDefault();
       if (!canPress()) return;
 
+      instrumentHud?.flashKey(k);
       audio.ensureAudio().then(() => audio.playNote(k));
       controller.advanceOneSyllable();
     }

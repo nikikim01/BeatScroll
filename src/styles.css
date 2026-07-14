@@ -196,3 +196,123 @@ button:hover {
   opacity: 0.9;
   line-height: 1.25;
 }
+
+.instrumentHud {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.synthKeyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.synthRow {
+  display: flex;
+  gap: 3px;
+}
+.synthRowBlack {
+  padding-left: 10px;
+}
+.synthKey {
+  position: relative;
+  width: 18px;
+  height: 22px;
+  border-radius: 4px;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.05s, transform 0.05s;
+}
+.synthKeyWhite {
+  background: #101823;
+  border: 1px solid #223449;
+  color: var(--muted);
+}
+.synthKeyBlack {
+  width: 14px;
+  height: 16px;
+  background: #05080c;
+  border: 1px solid #152233;
+  color: var(--muted);
+}
+.synthKey.keyActive {
+  background: var(--accent);
+  color: #06110a;
+  transform: translateY(1px);
+  animation: keyFlash 0.18s ease-out;
+}
+@keyframes keyFlash {
+  from {
+    box-shadow: 0 0 0 4px rgba(126, 231, 135, 0.35);
+  }
+  to {
+    box-shadow: 0 0 0 0 rgba(126, 231, 135, 0);
+  }
+}
+.wisp {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  pointer-events: none;
+  animation: wispRise 0.5s ease-out forwards;
+}
+@keyframes wispRise {
+  from {
+    opacity: 0.9;
+    transform: translate(-50%, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -16px) scale(0.4);
+  }
+}
+.drumsticks svg {
+  width: 44px;
+  height: 30px;
+}
+.drumsticks .stick {
+  stroke: #b98b56;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.drumsticks .stickTip {
+  fill: #e8c9a0;
+}
+.drumsticks.sticksHit .stickLeft {
+  animation: stickHitLeft 0.15s ease-out;
+}
+.drumsticks.sticksHit .stickRight {
+  animation: stickHitRight 0.15s ease-out;
+}
+@keyframes stickHitLeft {
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-14deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes stickHitRight {
+  0% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(14deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
