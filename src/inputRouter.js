@@ -11,6 +11,14 @@ export function createInputRouter({ audio, controller, tts, getDebounceMs }) {
   }
 
   function onKeyDown(e) {
+    const target = e.target;
+    const isTextEntry =
+      target &&
+      (target.tagName === "TEXTAREA" ||
+        target.tagName === "INPUT" ||
+        target.isContentEditable);
+    if (isTextEntry) return;
+
     const k = e.key.toLowerCase();
 
     if (k === "p" || k === "q") {
