@@ -316,3 +316,70 @@ button:hover {
     transform: rotate(0deg);
   }
 }
+
+.helpBtn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.helpBtn:hover {
+  color: var(--fg);
+}
+.helpBtn svg {
+  width: 18px;
+  height: 18px;
+}
+.helpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+.helpPanel {
+  position: relative;
+  max-width: 480px;
+  width: min(480px, 90vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #0e1520;
+  border: 1px solid #223449;
+  border-radius: 16px;
+  padding: 24px;
+}
+.helpPanel h2 {
+  margin-top: 0;
+}
+.helpPanel h3 {
+  font-size: 14px;
+  margin: 18px 0 8px;
+}
+.helpSteps {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.helpBody {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.helpCloseBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.helpCloseBtn:hover {
+  color: var(--fg);
+}

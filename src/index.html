@@ -17,6 +17,13 @@
         <h1>
           BeatScroll MVP
           <span class="headerBadge">keys = sound · presses = progress</span>
+          <button id="helpBtn" class="helpBtn" type="button" aria-label="How to use BeatScroll">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 2 L8 10 Q8 13 12 13 Q16 13 16 10 L16 2" fill="none" stroke="currentColor" stroke-width="1.6" />
+              <line x1="12" y1="13" x2="12" y2="20" stroke="currentColor" stroke-width="1.6" />
+              <line x1="9" y1="20" x2="15" y2="20" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </button>
         </h1>
 
         <div class="usageHint" id="hintMount">
@@ -139,6 +146,45 @@ Get swole with BeatScroll
         <div class="readerStage" id="stage" aria-label="reading stage"></div>
       </div>
     </main>
+
+    <!-- HELP -->
+    <div class="helpOverlay" id="helpOverlay" hidden>
+      <div class="helpPanel" role="dialog" aria-label="How to use BeatScroll">
+        <button id="helpCloseBtn" class="helpCloseBtn" type="button" aria-label="Close">×</button>
+        <h2>How this works</h2>
+
+        <h3>Quick start</h3>
+        <ol class="helpSteps">
+          <li>Paste or type your text, then click <span class="keyCap">Load Text</span>.</li>
+          <li>Click anywhere outside the textarea, then press
+            <span class="keyCap">A</span><span class="keyCap">S</span><span class="keyCap">D</span><span class="keyCap">F</span>
+            or
+            <span class="keyCap">J</span><span class="keyCap">K</span><span class="keyCap">L</span><span class="keyCap">;</span>
+            — each press moves you one syllable further into the word under the dashed line.</li>
+          <li>That's the whole loop. Everything below is optional flavor.</li>
+        </ol>
+
+        <h3>Add rhythm <span class="hintNote">(optional — pure sound, doesn't move your place)</span></h3>
+        <p class="helpBody">
+          <span class="keyCap">Space</span> kick ·
+          <span class="keyCap">H</span> hi-hat ·
+          <span class="keyCap">Shift</span>+<span class="keyCap">H</span> open hi-hat ·
+          <span class="keyCap">V</span> snare.
+          Hold <span class="keyCap">P</span> / <span class="keyCap">Q</span> while playing a note to shift its pitch up or down an octave.
+        </p>
+
+        <h3>Adjust your pace <span class="hintNote">(optional)</span></h3>
+        <p class="helpBody">
+          The <strong>Presses per syllable</strong> slider raises how many taps
+          each syllable needs — higher is slower and more deliberate.
+          Hold <span class="keyCap">Shift</span> (right) while pressing note keys
+          to burst forward through easy stretches — the longer you hold, the
+          bigger each press's jump. The <strong>Gradual deceleration</strong>
+          checkbox decides whether letting go snaps you back to your normal
+          pace instantly or eases you back down.
+        </p>
+      </div>
+    </div>
   </body>
 
 </html>

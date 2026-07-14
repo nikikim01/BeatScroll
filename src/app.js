@@ -4,6 +4,7 @@ import { createTTS } from "./tts.js";
 import { createStageView } from "./components/stageView.js";
 import { createControlsView } from "./components/controlsView.js";
 import { createInstrumentHud } from "./components/instrumentHud.js";
+import { createHelpPanel } from "./components/helpPanel.js";
 import { createController } from "./controller.js";
 import { createInputRouter } from "./inputRouter.js";
 
@@ -50,6 +51,13 @@ const instrumentHud = createInstrumentHud({
 });
 instrumentHud.mount();
 
+const helpPanel = createHelpPanel({
+  openBtn: document.getElementById("helpBtn"),
+  overlayEl: document.getElementById("helpOverlay"),
+  closeBtn: document.getElementById("helpCloseBtn"),
+});
+helpPanel.mount();
+
 const input = createInputRouter({
   audio,
   controller,
@@ -57,5 +65,6 @@ const input = createInputRouter({
   getDebounceMs: () => controlsView.getControls().debounceMs,
   setHatUI: controlsView.setHatUI,
   instrumentHud,
+  isHelpOpen: helpPanel.isOpen,
 });
 input.mount();

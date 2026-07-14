@@ -5,6 +5,7 @@ export function createInputRouter({
   getDebounceMs,
   setHatUI,
   instrumentHud,
+  isHelpOpen,
 }) {
   let lastPressAt = 0;
 
@@ -18,6 +19,8 @@ export function createInputRouter({
   }
 
   function onKeyDown(e) {
+    if (isHelpOpen?.()) return;
+
     const target = e.target;
     const isTextEntry =
       target &&
