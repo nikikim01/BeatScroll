@@ -6,6 +6,7 @@ export function createInputRouter({
   setHatUI,
   instrumentHud,
   isHelpOpen,
+  recorder,
 }) {
   let lastPressAt = 0;
 
@@ -34,6 +35,7 @@ export function createInputRouter({
     // octave modifiers
     if (k === "p" || k === "q") {
       audio.setModifierHeld(k, true);
+      recorder?.record("modifierDown", k);
       return;
     }
 
@@ -42,6 +44,7 @@ export function createInputRouter({
       audio.setHatOpenHeld(true);
       setHatUI?.(true);
       instrumentHud?.hitDrum("openHat");
+      recorder?.record("modifierDown", "shiftLeft");
       return;
     }
 
@@ -60,6 +63,7 @@ export function createInputRouter({
       if (!isSysCombo) {
         audio.ensureAudio().then(() => audio.playKick());
         instrumentHud?.hitDrum("kick");
+        recorder?.record("kick");
       }
       return;
     }
@@ -72,6 +76,7 @@ export function createInputRouter({
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playHat());
         instrumentHud?.hitDrum("hat");
+        recorder?.record("hat");
       }
       return;
     }
@@ -83,6 +88,7 @@ export function createInputRouter({
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playSnare());
         instrumentHud?.hitDrum("snare");
+        recorder?.record("snare");
       }
       return;
     }
@@ -94,6 +100,7 @@ export function createInputRouter({
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playCowbell());
         instrumentHud?.hitDrum("cowbell");
+        recorder?.record("cowbell");
       }
       return;
     }
@@ -105,6 +112,7 @@ export function createInputRouter({
         e.preventDefault();
         audio.ensureAudio().then(() => audio.playStickClick());
         instrumentHud?.hitDrum("stickClick");
+        recorder?.record("stickClick");
       }
       return;
     }
@@ -117,6 +125,7 @@ export function createInputRouter({
       if (!canPress()) return;
 
       instrumentHud?.flashKey(k);
+      recorder?.record("note", k);
       audio.ensureAudio().then(() => audio.playNote(k));
       controller.advanceOneSyllable();
     }
@@ -127,6 +136,7 @@ export function createInputRouter({
     if (e.code === "ShiftLeft") {
       audio.setHatOpenHeld(false);
       setHatUI?.(false);
+      recorder?.record("modifierUp", "shiftLeft");
       return;
     }
     if (e.code === "ShiftRight") {
@@ -135,6 +145,7 @@ export function createInputRouter({
     }
     if (k === "p" || k === "q") {
       audio.setModifierHeld(k, false);
+      recorder?.record("modifierUp", k);
       return;
     }
   }

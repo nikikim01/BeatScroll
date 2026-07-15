@@ -7,14 +7,28 @@ import { createInstrumentHud } from "./components/instrumentHud.js";
 import { createHelpPanel } from "./components/helpPanel.js";
 import { createController } from "./controller.js";
 import { createInputRouter } from "./inputRouter.js";
+import { createRecorder } from "./recorder.js";
+import { createPlayback } from "./playback.js";
 
 const state = createState();
 const audio = createAudioEngine();
 const tts = createTTS();
+const recorder = createRecorder();
 
 const stageView = createStageView({
   stageEl: document.getElementById("stage"),
   playheadEl: document.getElementById("playhead"),
+});
+
+const instrumentHud = createInstrumentHud({
+  hudEl: document.getElementById("hudMount"),
+});
+instrumentHud.mount();
+
+const playback = createPlayback({
+  audio,
+  instrumentHud,
+  hatIndicatorEl: document.getElementById("hatIndicator"),
 });
 
 const controlsView = createControlsView({
@@ -30,6 +44,11 @@ const controlsView = createControlsView({
   audio,
   hatIndicatorEl: document.getElementById("hatIndicator"),
   burstDecelEl: document.getElementById("burstDecel"),
+  recordBtn: document.getElementById("recordBtn"),
+  recordingStatusEl: document.getElementById("recordingStatus"),
+  recorder,
+  playBtn: document.getElementById("playBtn"),
+  playback,
 });
 
 const controller = createController({
@@ -46,11 +65,6 @@ const controller = createController({
 controlsView.mount(() => controller.loadFromTextarea());
 controller.loadFromTextarea();
 
-const instrumentHud = createInstrumentHud({
-  hudEl: document.getElementById("hudMount"),
-});
-instrumentHud.mount();
-
 const helpPanel = createHelpPanel({
   openBtn: document.getElementById("helpBtn"),
   overlayEl: document.getElementById("helpOverlay"),
@@ -66,5 +80,6 @@ const input = createInputRouter({
   setHatUI: controlsView.setHatUI,
   instrumentHud,
   isHelpOpen: helpPanel.isOpen,
+  recorder,
 });
 input.mount();
