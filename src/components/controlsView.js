@@ -16,6 +16,7 @@ export function createControlsView({
   recorder,
   playBtn,
   playback,
+  notationView,
 }) {
   function getControls() {
     return {
@@ -66,6 +67,7 @@ export function createControlsView({
         const events = recorder.stop();
         recordBtn.textContent = "Record";
         playBtn.disabled = events.length === 0;
+        notationView.render(events);
         const durationSec = events.length
           ? (events[events.length - 1].t / 1000).toFixed(1)
           : "0.0";

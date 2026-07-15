@@ -26,6 +26,9 @@ body {
   position: relative;
   padding: 18px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .hatIndicator {
   margin-top: 10px;
@@ -97,8 +100,35 @@ button:hover {
   border-color: #2f4a66;
 }
 .readerViewport {
-  height: calc(100vh - 36px);
+  flex: 1;
+  min-height: 0;
   position: relative;
+}
+.notationPanel {
+  flex-shrink: 0;
+  height: 160px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid #152233;
+  border-radius: 12px;
+  background: #06080b;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.notationStaff {
+  display: block;
+}
+.staffLine,
+.ledgerLine {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.accidental {
+  fill: var(--fg);
+  font-size: 12px;
+}
+.noteHead {
+  fill: var(--accent);
 }
 .readerStage {
   height: 100%;

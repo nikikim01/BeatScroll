@@ -5,6 +5,7 @@ import { createStageView } from "./components/stageView.js";
 import { createControlsView } from "./components/controlsView.js";
 import { createInstrumentHud } from "./components/instrumentHud.js";
 import { createHelpPanel } from "./components/helpPanel.js";
+import { createNotationView } from "./components/notationView.js";
 import { createController } from "./controller.js";
 import { createInputRouter } from "./inputRouter.js";
 import { createRecorder } from "./recorder.js";
@@ -31,6 +32,10 @@ const playback = createPlayback({
   hatIndicatorEl: document.getElementById("hatIndicator"),
 });
 
+const notationView = createNotationView({
+  mountEl: document.getElementById("notationMount"),
+});
+
 const controlsView = createControlsView({
   ppsEl: document.getElementById("pps"),
   ppsLabel: document.getElementById("ppsLabel"),
@@ -49,6 +54,7 @@ const controlsView = createControlsView({
   recorder,
   playBtn: document.getElementById("playBtn"),
   playback,
+  notationView,
 });
 
 const controller = createController({
