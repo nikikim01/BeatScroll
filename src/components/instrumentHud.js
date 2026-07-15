@@ -1,5 +1,5 @@
 const WHITE_KEYS = ["a", "s", "d", "f", "j", "k", "l", ";"];
-const BLACK_KEYS = ["w", "e", "r", "u", "i"];
+const BLACK_KEYS = ["w", "e", "t", "i", "o"];
 
 const WHITE_NOTE_NAMES = {
   a: "C",
@@ -14,11 +14,11 @@ const WHITE_NOTE_NAMES = {
 const BLACK_NOTE_NAMES = {
   w: { sharp: "C♯", flat: "D♭" },
   e: { sharp: "D♯", flat: "E♭" },
-  r: { sharp: "F♯", flat: "G♭" },
-  u: { sharp: "G♯", flat: "A♭" },
-  i: { sharp: "A♯", flat: "B♭" },
+  t: { sharp: "F♯", flat: "G♭" },
+  i: { sharp: "G♯", flat: "A♭" },
+  o: { sharp: "A♯", flat: "B♭" },
 };
-const BLACK_KEY_AFTER_WHITE_INDEX = { w: 0, e: 1, r: 3, u: 4, i: 5 };
+const BLACK_KEY_AFTER_WHITE_INDEX = { w: 0, e: 1, t: 3, i: 4, o: 5 };
 const WHITE_KEY_W = 20; // px, must match .synthKeyWhite width in CSS
 const BLACK_KEY_W = 14; // px, must match .synthKeyBlack width in CSS
 

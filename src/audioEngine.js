@@ -15,9 +15,9 @@ const NOTE_FREQ = {
   // black keys
   w: SEMI(1),
   e: SEMI(3),
-  r: SEMI(6),
-  u: SEMI(8),
-  i: SEMI(10),
+  t: SEMI(6),
+  i: SEMI(8),
+  o: SEMI(10),
 };
 
 export function createAudioEngine() {
