@@ -15,7 +15,7 @@ const NOTE_FREQ = {
   // black keys
   w: SEMI(1),
   e: SEMI(3),
-  t: SEMI(6),
+  u: SEMI(6),
   i: SEMI(8),
   o: SEMI(10),
 };

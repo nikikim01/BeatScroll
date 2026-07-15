@@ -11,7 +11,7 @@ Purpose: Quick, actionable context so an AI coding agent can be immediately prod
     - `cd src && python -m http.server 8000` → open `http://localhost:8000`
     - or `npx http-server ./src -p 8080`
 - Manual test: type or paste text in the textarea, then (with focus outside
-  the textarea) press `A S D F J K L ;` / `W E T I O` to advance, `Space` for
+  the textarea) press `A S D F J K L ;` / `W E U I O` to advance, `Space` for
   kick, `H`/`Shift+H` for hi-hat, `V` for snare, `P`/`Q` held for octave
   shift.
 
@@ -64,7 +64,7 @@ Purpose: Quick, actionable context so an AI coding agent can be immediately prod
 - Start a server or open the file; paste sample text into the textarea
   (typing should never trigger sound — see `inputRouter.js`'s text-entry
   guard); then, with focus outside the textarea, press
-  `A S D F J K L ;` / `W E T I O`, `Space`, `H`, `Shift+H`, `V`, and hold
+  `A S D F J K L ;` / `W E U I O`, `Space`, `H`, `Shift+H`, `V`, and hold
   `P`/`Q`.
 - Confirm pips update, the playhead remains at ~45% of the viewport, and
   scrolling happens as expected.

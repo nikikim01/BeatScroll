@@ -46,7 +46,7 @@ To run the BeatScroll application, follow these steps:
 ## Usage
 
 - Type or paste text into the textarea.
-- Press `A S D F J K L ;` (white keys) or `W E T I O` (black keys) to play a
+- Press `A S D F J K L ;` (white keys) or `W E U I O` (black keys) to play a
   note and advance one syllable-step.
 - Hold `P` for octave up or `Q` for octave down while pressing a note key.
 - Press `Space` for a kick, `H` for a closed hi-hat, `Shift+H` for an open
