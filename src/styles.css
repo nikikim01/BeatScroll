@@ -245,30 +245,37 @@ button:hover {
   transition: background 0.05s, transform 0.05s;
 }
 .synthKeyWhite {
+  --key-bg: #101823;
+  --key-color: var(--muted);
   width: 20px;
   height: 30px;
-  background: #101823;
+  background: var(--key-bg);
   border: 1px solid #223449;
-  color: var(--muted);
+  color: var(--key-color);
 }
 .synthKeyBlack {
+  --key-bg: #05080c;
+  --key-color: var(--muted);
   width: 14px;
   height: 18px;
-  background: #05080c;
+  background: var(--key-bg);
   border: 1px solid #152233;
-  color: var(--muted);
+  color: var(--key-color);
 }
 .synthKey.keyActive {
-  background: var(--accent);
-  color: #06110a;
-  transform: translateY(1px);
   animation: keyFlash 0.18s ease-out;
 }
 @keyframes keyFlash {
-  from {
+  0% {
+    background: var(--accent);
+    color: #06110a;
+    transform: translateY(1px);
     box-shadow: 0 0 0 4px rgba(126, 231, 135, 0.35);
   }
-  to {
+  100% {
+    background: var(--key-bg);
+    color: var(--key-color);
+    transform: translateY(0);
     box-shadow: 0 0 0 0 rgba(126, 231, 135, 0);
   }
 }
