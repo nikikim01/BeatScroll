@@ -202,41 +202,58 @@ button:hover {
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.keySignatureSelect {
+  background: #101823;
+  color: var(--muted);
+  border: 1px solid #223449;
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 4px;
 }
 .synthKeyboard {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  position: relative;
+  width: 160px;
+  height: 30px;
 }
-.synthRow {
+.synthRowWhite {
   display: flex;
-  gap: 3px;
+  position: relative;
 }
 .synthRowBlack {
-  padding-left: 10px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  pointer-events: none;
+}
+.synthRowBlack .synthKey {
+  position: absolute;
+  pointer-events: auto;
 }
 .synthKey {
   position: relative;
-  width: 18px;
-  height: 22px;
-  border-radius: 4px;
-  font-size: 9px;
+  border-radius: 3px;
+  font-size: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.05s, transform 0.05s;
 }
 .synthKeyWhite {
+  width: 20px;
+  height: 30px;
   background: #101823;
   border: 1px solid #223449;
   color: var(--muted);
 }
 .synthKeyBlack {
   width: 14px;
-  height: 16px;
+  height: 18px;
   background: #05080c;
   border: 1px solid #152233;
   color: var(--muted);
