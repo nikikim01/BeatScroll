@@ -55,6 +55,7 @@ const controlsView = createControlsView({
   playBtn: document.getElementById("playBtn"),
   playback,
   notationView,
+  downloadMusicXmlBtn: document.getElementById("downloadMusicXmlBtn"),
 });
 
 const controller = createController({

@@ -17,6 +17,7 @@ export function createControlsView({
   playBtn,
   playback,
   notationView,
+  downloadMusicXmlBtn,
 }) {
   function getControls() {
     return {
@@ -36,6 +37,7 @@ export function createControlsView({
     debounceLabel.textContent = debounceEl.value;
     if (hatIndicatorEl) setHatUI(false);
     playBtn.disabled = true;
+    downloadMusicXmlBtn.disabled = true;
 
     ppsEl.addEventListener("input", () => {
       ppsLabel.textContent = ppsEl.value;
@@ -68,6 +70,8 @@ export function createControlsView({
         recordBtn.textContent = "Record";
         playBtn.disabled = events.length === 0;
         notationView.render(events);
+        downloadMusicXmlBtn.disabled =
+          events.filter((e) => e.type === "note").length === 0;
         const durationSec = events.length
           ? (events[events.length - 1].t / 1000).toFixed(1)
           : "0.0";
@@ -99,6 +103,19 @@ export function createControlsView({
           recordBtn.disabled = false;
         });
       }
+    });
+
+    downloadMusicXmlBtn.addEventListener("click", () => {
+      const xml = notationView.getMusicXML();
+      const blob = new Blob([xml], {
+        type: "application/vnd.recordare.musicxml+xml",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "beatscroll-recording.musicxml";
+      a.click();
+      URL.revokeObjectURL(url);
     });
   }
 

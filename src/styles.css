@@ -117,6 +117,7 @@ button:hover {
 }
 .notationStaff {
   display: block;
+  cursor: copy;
 }
 .staffLine,
 .ledgerLine {
@@ -129,6 +130,7 @@ button:hover {
 }
 .noteHead {
   fill: var(--accent);
+  cursor: grab;
 }
 .readerStage {
   height: 100%;
