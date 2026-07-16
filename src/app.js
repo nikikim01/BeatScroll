@@ -10,6 +10,7 @@ import { createController } from "./controller.js";
 import { createInputRouter } from "./inputRouter.js";
 import { createRecorder } from "./recorder.js";
 import { createPlayback } from "./playback.js";
+import { createNotationPlayback } from "./notationPlayback.js";
 
 const state = createState();
 const audio = createAudioEngine();
@@ -36,6 +37,11 @@ const notationView = createNotationView({
   mountEl: document.getElementById("notationMount"),
 });
 
+const notationPlayback = createNotationPlayback({
+  audio,
+  instrumentHud,
+});
+
 const controlsView = createControlsView({
   ppsEl: document.getElementById("pps"),
   ppsLabel: document.getElementById("ppsLabel"),
@@ -56,6 +62,12 @@ const controlsView = createControlsView({
   playback,
   notationView,
   downloadMusicXmlBtn: document.getElementById("downloadMusicXmlBtn"),
+  annotationModeEl: document.getElementById("annotationMode"),
+  resetAnnotationsBtn: document.getElementById("resetAnnotationsBtn"),
+  notationPlayBtn: document.getElementById("notationPlayBtn"),
+  notationPauseBtn: document.getElementById("notationPauseBtn"),
+  tempoInput: document.getElementById("tempoInput"),
+  notationPlayback,
 });
 
 const controller = createController({

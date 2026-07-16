@@ -68,6 +68,26 @@
           <button id="playBtn">Play Recording</button>
           <button id="downloadMusicXmlBtn">Download MusicXML</button>
         </div>
+
+        <div class="controlRow" id="annotationToolbar">
+          <label for="annotationMode">Add:</label>
+          <select id="annotationMode">
+            <option value="none">Notes (click/drag as before)</option>
+            <option value="breath">Breath mark</option>
+            <option value="accent">Accent</option>
+            <option value="cresc">Crescendo</option>
+            <option value="decresc">Decrescendo</option>
+          </select>
+          <button id="resetAnnotationsBtn">Reset Annotations</button>
+          <span class="hintNote">Dynamics are visual only for now.</span>
+        </div>
+
+        <div class="controlRow buttonRow">
+          <button id="notationPlayBtn">Play Notation</button>
+          <button id="notationPauseBtn">Pause</button>
+          <label for="tempoInput">Tempo (BPM)</label>
+          <input id="tempoInput" type="number" min="40" max="240" step="5" value="100" />
+        </div>
       </section>
 
       <section class="controlLegend" id="legendMount" aria-label="control legend">

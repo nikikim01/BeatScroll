@@ -18,6 +18,12 @@ export function createControlsView({
   playback,
   notationView,
   downloadMusicXmlBtn,
+  annotationModeEl,
+  resetAnnotationsBtn,
+  notationPlayBtn,
+  notationPauseBtn,
+  tempoInput,
+  notationPlayback,
 }) {
   function getControls() {
     return {
@@ -38,6 +44,7 @@ export function createControlsView({
     if (hatIndicatorEl) setHatUI(false);
     playBtn.disabled = true;
     downloadMusicXmlBtn.disabled = true;
+    notationPauseBtn.disabled = true;
 
     ppsEl.addEventListener("input", () => {
       ppsLabel.textContent = ppsEl.value;
@@ -116,6 +123,43 @@ export function createControlsView({
       a.download = "beatscroll-recording.musicxml";
       a.click();
       URL.revokeObjectURL(url);
+    });
+
+    annotationModeEl.addEventListener("change", () => {
+      notationView.setMode(annotationModeEl.value);
+    });
+
+    resetAnnotationsBtn.addEventListener("click", () => {
+      notationView.resetAnnotations();
+    });
+
+    notationPlayBtn.addEventListener("click", () => {
+      if (notationPlayback.isPaused()) {
+        notationPlayback.resume();
+      } else {
+        const doc = notationView.getDoc();
+        if (!doc.length) return;
+        notationPlayback.play(
+          doc,
+          notationView.getAnnotations(),
+          parseInt(tempoInput.value, 10),
+          () => {
+            notationPlayBtn.textContent = "Play Notation";
+            notationPauseBtn.disabled = true;
+          }
+        );
+      }
+      notationPlayBtn.textContent = "Playing…";
+      notationPauseBtn.disabled = false;
+    });
+
+    notationPauseBtn.addEventListener("click", () => {
+      notationPlayback.pause();
+      notationPlayBtn.textContent = "Resume Notation";
+    });
+
+    tempoInput.addEventListener("change", () => {
+      notationPlayback.setTempo(parseInt(tempoInput.value, 10));
     });
   }
 

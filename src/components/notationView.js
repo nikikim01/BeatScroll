@@ -14,6 +14,18 @@ const NOTE_INFO = {
   o: { step: 5, accidental: "sharp" },
 };
 
+const REVERSE_NOTE_INFO = Object.entries(NOTE_INFO).reduce(
+  (acc, [key, info]) => {
+    acc[`${info.step}:${info.accidental ?? "natural"}`] = key;
+    return acc;
+  },
+  {}
+);
+
+export function keyForNote(note) {
+  return REVERSE_NOTE_INFO[`${note.step}:${note.accidental ?? "natural"}`];
+}
+
 const STEP_TO_PITCH = [
   { letter: "C", octave: 4 },
   { letter: "D", octave: 4 },
@@ -43,6 +55,9 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 export function createNotationView({ mountEl }) {
   let notationDoc = [];
+  let annotations = { breaths: [], accents: new Set(), hairpins: [] };
+  let mode = "none";
+  let hairpinDragStart = null;
 
   function render(events) {
     notationDoc = (events || [])
@@ -54,20 +69,69 @@ export function createNotationView({ mountEl }) {
           : null;
       })
       .filter(Boolean);
+    annotations = { breaths: [], accents: new Set(), hairpins: [] };
     renderDoc();
+  }
+
+  function setMode(newMode) {
+    mode = newMode;
+    hairpinDragStart = null;
+  }
+
+  function resetAnnotations() {
+    annotations = { breaths: [], accents: new Set(), hairpins: [] };
+    renderDoc();
+  }
+
+  function getDoc() {
+    return notationDoc;
+  }
+
+  function getAnnotations() {
+    return annotations;
+  }
+
+  function cleanupAnnotationsForDelete(index) {
+    annotations.accents.delete(index);
+    annotations.accents = new Set(
+      [...annotations.accents].map((i) => (i > index ? i - 1 : i))
+    );
+    annotations.breaths = annotations.breaths
+      .filter((g) => g !== index)
+      .map((g) => (g > index ? g - 1 : g));
+    annotations.hairpins = annotations.hairpins
+      .filter((h) => !(h.from <= index && index <= h.to))
+      .map((h) => ({
+        ...h,
+        from: h.from > index ? h.from - 1 : h.from,
+        to: h.to > index ? h.to - 1 : h.to,
+      }));
   }
 
   function attachNoteInteractions(head, index) {
     head.addEventListener("dblclick", (e) => {
       e.stopPropagation();
       notationDoc.splice(index, 1);
+      cleanupAnnotationsForDelete(index);
       renderDoc();
     });
 
     head.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
-      head.setPointerCapture(e.pointerId);
 
+      if (mode === "accent") {
+        if (annotations.accents.has(index)) annotations.accents.delete(index);
+        else annotations.accents.add(index);
+        renderDoc();
+        return;
+      }
+
+      if (mode === "cresc" || mode === "decresc") {
+        hairpinDragStart = index;
+        return;
+      }
+
+      head.setPointerCapture(e.pointerId);
       const svg = head.ownerSVGElement;
 
       const onMove = (moveEvent) => {
@@ -150,6 +214,45 @@ export function createNotationView({ mountEl }) {
       svg.appendChild(head);
     });
 
+    annotations.accents.forEach((i) => {
+      if (!notationDoc[i]) return;
+      const x = MARGIN + i * NOTE_SPACING;
+      const y = yForStep(notationDoc[i].step) - 10;
+      const accent = document.createElementNS(SVG_NS, "text");
+      accent.setAttribute("x", x - 4);
+      accent.setAttribute("y", y);
+      accent.setAttribute("class", "accentMark");
+      accent.textContent = "›";
+      svg.appendChild(accent);
+    });
+
+    annotations.breaths.forEach((afterIndex) => {
+      const x = MARGIN + (afterIndex + 0.5) * NOTE_SPACING;
+      const breath = document.createElementNS(SVG_NS, "text");
+      breath.setAttribute("x", x);
+      breath.setAttribute("y", STAFF_LINE_YS[0] - 8);
+      breath.setAttribute("class", "breathMark");
+      breath.textContent = ",";
+      svg.appendChild(breath);
+    });
+
+    annotations.hairpins.forEach(({ type, from, to }) => {
+      const x1 = MARGIN + from * NOTE_SPACING;
+      const x2 = MARGIN + to * NOTE_SPACING;
+      const yMid = 120;
+      const wide = 6;
+      const [leftHalf, rightHalf] = type === "cresc" ? [0, wide] : [wide, 0];
+      const hairpin = document.createElementNS(SVG_NS, "path");
+      hairpin.setAttribute(
+        "d",
+        `M ${x1} ${yMid - leftHalf} L ${x2} ${yMid - rightHalf} M ${x1} ${
+          yMid + leftHalf
+        } L ${x2} ${yMid + rightHalf}`
+      );
+      hairpin.setAttribute("class", "hairpin");
+      svg.appendChild(hairpin);
+    });
+
     svg.addEventListener("click", (e) => {
       if (e.target.classList.contains("noteHead")) return;
       const rect = svg.getBoundingClientRect();
@@ -157,6 +260,17 @@ export function createNotationView({ mountEl }) {
       const scaleY = VIEWBOX_HEIGHT / rect.height;
       const x = (e.clientX - rect.left) * scaleX;
       const y = (e.clientY - rect.top) * scaleY;
+
+      if (mode === "breath") {
+        const gapIndex = Math.round((x - MARGIN) / NOTE_SPACING) - 1;
+        const existing = annotations.breaths.indexOf(gapIndex);
+        if (existing === -1) annotations.breaths.push(gapIndex);
+        else annotations.breaths.splice(existing, 1);
+        renderDoc();
+        return;
+      }
+      if (mode !== "none") return;
+
       const step = stepFromY(y);
       const insertAt = notationDoc.findIndex(
         (_, i) => MARGIN + i * NOTE_SPACING > x
@@ -164,6 +278,25 @@ export function createNotationView({ mountEl }) {
       const index = insertAt === -1 ? notationDoc.length : insertAt;
       notationDoc.splice(index, 0, { step, accidental: null, t: null });
       renderDoc();
+    });
+
+    svg.addEventListener("pointerup", (e) => {
+      if (
+        (mode === "cresc" || mode === "decresc") &&
+        hairpinDragStart !== null
+      ) {
+        const target = e.target;
+        const endIndex = Number(target?.dataset?.index);
+        if (!Number.isNaN(endIndex) && endIndex !== hairpinDragStart) {
+          annotations.hairpins.push({
+            type: mode === "cresc" ? "cresc" : "decresc",
+            from: Math.min(hairpinDragStart, endIndex),
+            to: Math.max(hairpinDragStart, endIndex),
+          });
+          renderDoc();
+        }
+        hairpinDragStart = null;
+      }
     });
 
     mountEl.innerHTML = "";
@@ -205,5 +338,12 @@ export function createNotationView({ mountEl }) {
     return buildMusicXML();
   }
 
-  return { render, getMusicXML };
+  return {
+    render,
+    getMusicXML,
+    setMode,
+    resetAnnotations,
+    getDoc,
+    getAnnotations,
+  };
 }

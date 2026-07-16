@@ -132,6 +132,19 @@ button:hover {
   fill: var(--accent);
   cursor: grab;
 }
+.accentMark {
+  fill: var(--fg);
+  font-size: 11px;
+}
+.breathMark {
+  fill: var(--muted);
+  font-size: 16px;
+}
+.hairpin {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1;
+}
 .readerStage {
   height: 100%;
   overflow: auto;
